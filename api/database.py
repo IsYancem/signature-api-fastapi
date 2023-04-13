@@ -3,7 +3,7 @@ import mysql.connector
 def get_database_connection():
     config = {
         'user': 'root',
-        'password': 'password',
+        'password': '45567889-123',
         'host': 'localhost',
         'database': 'signer_pulpo'
     }
@@ -86,3 +86,12 @@ if __name__ == '__main__':
         print('Conexión exitosa a la base de datos!')
     except Exception as e:
         print(f'Error al conectar a la base de datos: {str(e)}')
+
+def update_user_last_login(username, last_login):
+    cnx = get_database_connection()
+    cursor = cnx.cursor()
+    query = "UPDATE users SET last_login = %s WHERE username = %s"
+    cursor.execute(query, (last_login, username))
+    cnx.commit()
+    cursor.close()
+    cnx.close()

@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 import jwt
 from datetime import datetime, timedelta
-from database import get_user_by_username, get_user_by_email, update_user_token
+from database import get_user_by_username, get_user_by_email, update_user_token, update_user_last_login
 
 JWT_SECRET_KEY = "jwt_secret_key"
 JWT_ALGORITHM = "HS256"
@@ -29,9 +29,14 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(status_code=403, detail="Cuenta desactivada")
     if user[4] == 0:
         raise HTTPException(status_code=403, detail="Usuario bloqueado")
+
+    # Actualizar last_login
+    now = datetime.utcnow()
+    update_user_last_login(user[1], now)
+
     token = jwt.encode({
         'user_id': user[0],
-        'exp': datetime.utcnow() + timedelta(seconds=JWT_EXP_DELTA_SECONDS)
+        'exp': now + timedelta(seconds=JWT_EXP_DELTA_SECONDS)
     }, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
     update_user_token(user[1], token)
