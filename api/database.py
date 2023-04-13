@@ -3,7 +3,7 @@ import mysql.connector
 def get_database_connection():
     config = {
         'user': 'root',
-        'password': 'admin',
+        'password': 'password',
         'host': 'localhost',
         'database': 'signer_pulpo'
     }
@@ -17,6 +17,16 @@ def get_user_by_username(username):
     cursor = cnx.cursor()
     query = "SELECT * FROM users WHERE username = %s"
     cursor.execute(query, (username,))
+    result = cursor.fetchone()
+    cursor.close()
+    cnx.close()
+    return result
+
+def get_user_by_email(email):
+    cnx = get_database_connection()
+    cursor = cnx.cursor()
+    query = "SELECT * FROM users WHERE email = %s"
+    cursor.execute(query, (email,))
     result = cursor.fetchone()
     cursor.close()
     cnx.close()

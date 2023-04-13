@@ -15,16 +15,21 @@ login_router = APIRouter()
 
 @login_router.post("/login")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    if not form_data.username or not form_data.password:
+        raise HTTPException(status_code=400, detail="Debe ingresar un nombre de usuario y una contraseña")
     user = get_user_by_username(form_data.username)
     if not user:
-        raise HTTPException(status_code=400, detail="Usuario y/o contraseña incorrectos")
+        raise HTTPException(status_code=400, detail="Nombre de usuario incorrecto")
     if not pwd_context.verify(form_data.password, user[2]):
-        raise HTTPException(status_code=400, detail="Usuario y/o contraseña incorrectos")
+        raise HTTPException(status_code=400, detail="Contraseña incorrecta")
+    if user[3] == 0:
+        raise HTTPException(status_code=403, detail="Cuenta desactivada")
+    if user[4] == 0:
+        raise HTTPException(status_code=403, detail="Usuario bloqueado")
     token = jwt.encode({
         'user_id': user[0],
         'exp': datetime.utcnow() + timedelta(seconds=JWT_EXP_DELTA_SECONDS)
     }, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
-    
 
     update_user_token(user[1], token)
 
