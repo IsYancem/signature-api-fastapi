@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 import jwt
 from datetime import datetime, timedelta
-from database import get_user_by_username, update_user_token
+from database import get_user_by_username, get_user_by_email, update_user_token
 
 JWT_SECRET_KEY = "jwt_secret_key"
 JWT_ALGORITHM = "HS256"
@@ -17,9 +17,12 @@ login_router = APIRouter()
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     if not form_data.username or not form_data.password:
         raise HTTPException(status_code=400, detail="Debe ingresar un nombre de usuario y una contraseña")
-    user = get_user_by_username(form_data.username)
+    if "@" in form_data.username:
+        user = get_user_by_email(form_data.username)
+    else:
+        user = get_user_by_username(form_data.username)
     if not user:
-        raise HTTPException(status_code=400, detail="Nombre de usuario incorrecto")
+        raise HTTPException(status_code=400, detail="Nombre de usuario o correo electrónico incorrecto")
     if not pwd_context.verify(form_data.password, user[2]):
         raise HTTPException(status_code=400, detail="Contraseña incorrecta")
     if user[3] == 0:
