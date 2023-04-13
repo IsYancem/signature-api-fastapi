@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from login import login_router  
+from login import login_router
 from register import register_router
-from digitalSignature import sign_route 
+from digitalSignature import sign_route
+from authToken import auth_router
 
 app = FastAPI()
 
@@ -19,6 +20,8 @@ app.include_router(register_router)
 #Aqui esta la ruta para el endpoint /sign-xml
 app.include_router(sign_route)
 
+app.include_router(auth_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,3 +29,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+
+

@@ -3,7 +3,7 @@ import mysql.connector
 def get_database_connection():
     config = {
         'user': 'root',
-        'password': '45567889-123',
+        'password': 'admin',
         'host': 'localhost',
         'database': 'signer_pulpo'
     }

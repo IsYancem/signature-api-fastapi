@@ -6,9 +6,10 @@ from xades.policy import ImpliedPolicy
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.hazmat.backends import default_backend
 from tempfile import NamedTemporaryFile
-from fastapi import  HTTPException, File, UploadFile, Form,  APIRouter
+from fastapi import  HTTPException, File, UploadFile, Form,  APIRouter, Depends
 from starlette.responses import JSONResponse
 from typing import Optional
+from authToken import verify_token
 
 
 def generate_short_id():
@@ -102,7 +103,7 @@ def sign_xml(xml_file, p12_file, p12_password, output_file):
 
 sign_route = APIRouter()
 
-@sign_route.post("/sign-xml")
+@sign_route.post("/sign-xml", dependencies=[Depends(verify_token)])
 async def sign_xml_api(xml_file: Optional[UploadFile] = File(None), p12_file: Optional[UploadFile] = File(None), p12_password: Optional[str] = Form(None)):
     
     if not xml_file:
