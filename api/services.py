@@ -82,7 +82,7 @@ def get_user_by_username(username):
 def get_user_by_email(email):
     cnx = connect()
     cursor = cnx.cursor()
-    query = "SELECT * FROM usuarios WHERE email = %s"
+    query = "SELECT * FROM usuarios WHERE correo = %s"
     cursor.execute(query, (email,))
     result = cursor.fetchone()
     cursor.close()
