@@ -1,5 +1,9 @@
 from database import connect
 from models import Usuario, Firma, ArchivoFirmado, TokenSesion
+from datetime import datetime, timedelta
+
+JWT_EXP_DELTA_SECONDS = 3600  # 1 hora
+
 
 # Servicio para agregar un usuario
 def create_user(user: Usuario):
@@ -22,15 +26,6 @@ def get_user_by_email_or_username(email: str, username: str):
     connection.close()
     return result
 
-# Servicio para agregar un token de sesión
-def create_session_token(token_session: TokenSesion):
-    connection = connect()
-    cursor = connection.cursor()
-    query = f"INSERT INTO TokensSesion (token, fecha_expiracion, usuario_id) VALUES ('{token_session.token}', '{token_session.fecha_expiracion}', {token_session.usuario_id});"
-    cursor.execute(query)
-    connection.commit()
-    cursor.close()
-    connection.close()
 
 # Servicio para agregar una firma
 def create_firma(firma: Firma):
@@ -73,3 +68,57 @@ def get_archivos_firmados_by_user(user_id: int):
     cursor.close()
     connection.close()
     return result
+
+def get_user_by_username(username):
+    cnx = connect()
+    cursor = cnx.cursor()
+    query = "SELECT * FROM usuarios WHERE username = %s"
+    cursor.execute(query, (username,))
+    result = cursor.fetchone()
+    cursor.close()
+    cnx.close()
+    return result
+
+def get_user_by_email(email):
+    cnx = connect()
+    cursor = cnx.cursor()
+    query = "SELECT * FROM usuarios WHERE email = %s"
+    cursor.execute(query, (email,))
+    result = cursor.fetchone()
+    cursor.close()
+    cnx.close()
+    return result
+
+def get_session_token_by_user_id(user_id: int):
+    connection = connect()
+    cursor = connection.cursor()
+    query = f"SELECT * FROM TokensSesion WHERE usuario_id = {user_id};"
+    cursor.execute(query)
+    result = cursor.fetchone()
+    cursor.close()
+    connection.close()
+    return result
+
+# Servicio para agregar un token de sesión o actualizarlo si ya existe
+def create_or_update_session_token(user_id: int, token: str):
+    connection = connect()
+    cursor = connection.cursor()
+
+    # Buscar el token de sesión actual del usuario
+    query = f"SELECT * FROM TokensSesion WHERE usuario_id = {user_id};"
+    cursor.execute(query)
+    result = cursor.fetchone()
+    token_sesion = TokenSesion(token=token, fecha_expiracion=str(datetime.now() + timedelta(seconds=JWT_EXP_DELTA_SECONDS)), usuario_id=user_id)
+
+    if result is None:
+        # Si no hay un token de sesión existente, crear uno nuevo
+        query = f"INSERT INTO TokensSesion (token, fecha_expiracion, usuario_id) VALUES ('{token_sesion.token}', '{token_sesion.fecha_expiracion}', {token_sesion.usuario_id});"
+        cursor.execute(query)
+    else:
+        # Si ya hay un token de sesión existente, actualizarlo
+        query = f"UPDATE TokensSesion SET token = '{token}', fecha_expiracion='{token_sesion.fecha_expiracion}'  WHERE usuario_id = {user_id};"
+        cursor.execute(query)
+
+    connection.commit()
+    cursor.close()
+    connection.close()

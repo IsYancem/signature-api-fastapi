@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from digitalSignature import sign_route
 from register import register_route
+from login import login_router
 
 app = FastAPI()
 
@@ -12,6 +13,7 @@ app.mount("/firmados", StaticFiles(directory="firmados"), name="firmados")
 # Aqui esta la ruta para el endpoint /sign-xml
 app.include_router(sign_route)
 app.include_router(register_route)
+app.include_router(login_router)
 
 app.add_middleware(
     CORSMiddleware,
