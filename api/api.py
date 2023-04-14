@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from digitalSignature import sign_route
-from register import register_route
+from signup import register_route
 from login import login_router
 
 app = FastAPI()

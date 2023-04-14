@@ -116,7 +116,7 @@ def create_or_update_session_token(user_id: int, token: str):
         cursor.execute(query)
     else:
         # Si ya hay un token de sesión existente, actualizarlo
-        query = f"UPDATE TokensSesion SET token = '{token}', fecha_expiracion='{token_sesion.fecha_expiracion}'  WHERE usuario_id = {user_id};"
+        query = f"UPDATE TokensSesion SET token = '{token_sesion.token}', fecha_expiracion='{token_sesion.fecha_expiracion}'  WHERE usuario_id = {user_id};"
         cursor.execute(query)
 
     connection.commit()

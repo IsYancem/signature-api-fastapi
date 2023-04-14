@@ -12,7 +12,7 @@ class UserCreate(BaseModel):
 
 register_route = APIRouter()
 
-@register_route.post("/register", status_code=status.HTTP_201_CREATED)
+@register_route.post("/signup", status_code=status.HTTP_201_CREATED)
 async def register_user(user: UserCreate):
     existing_user = get_user_by_email_or_username(user.correo, user.username)
 
