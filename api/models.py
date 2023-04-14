@@ -1,25 +1,40 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, TIMESTAMP
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
+from pydantic import BaseModel
+from typing import Optional
 
-Base = declarative_base()
+# Modelo de Roles
+class Role(BaseModel):
+    id: Optional[int]
+    nombre: str
 
-class User(Base):
-    __tablename__ = 'users'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(String(255), nullable=False, unique=True)
-    password = Column(String(255), nullable=False)
-    email = Column(String(255), nullable=False, unique=True)
-    created_at = Column(TIMESTAMP, nullable=False, server_default='CURRENT_TIMESTAMP')
-    last_login = Column(TIMESTAMP)
-    token = Column(String(255))
-    signed_files = relationship("SignedFile", back_populates="user")
+# Modelo de Usuarios
+class Usuario(BaseModel):
+    id: Optional[int]
+    username: str
+    password: str
+    correo: str
+    estado: bool
+    role_id: int
 
-class SignedFile(Base):
-    __tablename__ = 'signed_files'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    file_name = Column(String(255), nullable=False)
-    file_path = Column(String(255), nullable=False)
-    created_at = Column(TIMESTAMP, nullable=False, server_default='CURRENT_TIMESTAMP')
-    user = relationship("User", back_populates="signed_files")
+# Modelo de TokensSesion
+class TokenSesion(BaseModel):
+    id: Optional[int]
+    token: str
+    fecha_expiracion: str
+    usuario_id: int
+
+# Modelo de Firmas
+class Firma(BaseModel):
+    id: Optional[int]
+    nombre: str
+    archivo_p12: bytes
+    contrasena_p12: bytes
+    token_p12: str
+    usuario_id: int
+
+# Modelo de ArchivosFirmados
+class ArchivoFirmado(BaseModel):
+    id: Optional[int]
+    nombre_archivo: str
+    fecha_hora_firma: str
+    firma_id: int
+    usuario_id: int

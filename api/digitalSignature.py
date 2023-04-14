@@ -9,8 +9,6 @@ from tempfile import NamedTemporaryFile
 from fastapi import  HTTPException, File, UploadFile, Form,  APIRouter, Depends
 from starlette.responses import JSONResponse
 from typing import Optional
-from authToken import verify_token
-
 
 def generate_short_id():
     return str(random.randint(100000, 999999))
@@ -103,7 +101,7 @@ def sign_xml(xml_file, p12_file, p12_password, output_file):
 
 sign_route = APIRouter()
 
-@sign_route.post("/sign-xml", dependencies=[Depends(verify_token)])
+@sign_route.post("/sign-xml")
 async def sign_xml_api(xml_file: Optional[UploadFile] = File(None), p12_file: Optional[UploadFile] = File(None), p12_password: Optional[str] = Form(None)):
     
     if not xml_file:
