@@ -1,8 +1,11 @@
 from database import connect
 from models import Usuario, Firma, ArchivoFirmado, TokenSesion
 from datetime import datetime, timedelta
+import base64
+import io
 
-JWT_EXP_DELTA_SECONDS = 3600  # 1 hora
+
+JWT_EXP_DELTA_SECONDS = 3600*24  # 1 hora
 
 
 # Servicio para agregar un usuario
@@ -27,12 +30,15 @@ def get_user_by_email_or_username(email: str, username: str):
     return result
 
 
-# Servicio para agregar una firma
 def create_firma(firma: Firma):
     connection = connect()
     cursor = connection.cursor()
-    query = f"INSERT INTO Firmas (nombre, archivo_p12, contrasena_p12, token_p12, usuario_id) VALUES ('{firma.nombre}', '{firma.archivo_p12}', '{firma.contrasena_p12}', '{firma.token_p12}', {firma.usuario_id});"
-    cursor.execute(query)
+
+    # Insertar la firma en la base de datos usando la cadena base64
+    query = "INSERT INTO Firmas (nombre, archivo_p12, contrasena_p12, token_p12, usuario_id) VALUES (%s, %s, %s, %s, %s);"
+    data = (firma.nombre, firma.archivo_p12, firma.contrasena_p12, firma.token_p12, firma.usuario_id)
+    cursor.execute(query, data)
+
     connection.commit()
     cursor.close()
     connection.close()
