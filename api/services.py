@@ -128,3 +128,16 @@ def create_or_update_session_token(user_id: int, token: str):
     connection.commit()
     cursor.close()
     connection.close()
+
+    # Añade esta función a tu archivo services.py
+def get_firmas_by_user_id(user_id: int):
+    connection = connect()
+    cursor = connection.cursor()
+    firmas = []
+    query = "SELECT id, nombre FROM firmas WHERE usuario_id = %s" 
+    result = cursor.execute(query, (user_id,))
+
+    for row in cursor:  # Cambia 'result' por 'cursor'
+        firmas.append({"id": row[0], "name": row[1]})
+
+    return firmas
