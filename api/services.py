@@ -1,12 +1,10 @@
 from database import connect
 from models import Usuario, Firma, ArchivoFirmado, TokenSesion
 from datetime import datetime, timedelta
-import base64
-import io
+import bcrypt
 
 
 JWT_EXP_DELTA_SECONDS = 3600*24  # 1 hora
-
 
 # Servicio para agregar un usuario
 def create_user(user: Usuario):
@@ -129,7 +127,8 @@ def create_or_update_session_token(user_id: int, token: str):
     cursor.close()
     connection.close()
 
-    # Añade esta función a tu archivo services.py
+
+# Esta funcion obtiene firmas por id de usuario
 def get_firmas_by_user_id(user_id: int):
     connection = connect()
     cursor = connection.cursor()
@@ -141,3 +140,49 @@ def get_firmas_by_user_id(user_id: int):
         firmas.append({"id": row[0], "name": row[1]})
 
     return firmas
+
+
+#Esta funcion elimina firmas por id 
+def delete_firma_by_id(signature_id: int, user_id: int):
+    connection = connect()
+    cursor = connection.cursor()
+    query = f"DELETE FROM Firmas WHERE id = {signature_id} AND usuario_id = {user_id};"
+    cursor.execute(query)
+    deleted_rows = cursor.rowcount
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return deleted_rows
+
+
+# Función para actualizar la contraseña de un usuario
+def update_user_password(user_id: int, new_password: str):
+    connection = connect()
+    cursor = connection.cursor()
+    query = f"UPDATE Usuarios SET password = '{new_password}' WHERE id = {user_id};"
+    cursor.execute(query)
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+# Función para obtener el token de una firma por nombre y id de usuario
+def get_api_token_by_name_and_user_id(name: str, user_id: int):
+    connection = connect()
+    cursor = connection.cursor()
+    query = f"SELECT token_p12 FROM Firmas WHERE nombre = '{name}' AND usuario_id = {user_id};"
+    cursor.execute(query)
+    result = cursor.fetchone()
+    cursor.close()
+    connection.close()
+    return result
+
+def update_api_token_by_name_and_user_id(name: str, api_key: str, user_id: int):
+    connection = connect()
+    cursor = connection.cursor()
+    query = f"UPDATE Firmas SET token_p12 = '{api_key}' WHERE nombre = '{name}' AND usuario_id = {user_id};"
+    cursor.execute(query)
+    updated_rows = cursor.rowcount
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return updated_rows, api_key

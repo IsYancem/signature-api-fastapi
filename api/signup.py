@@ -1,14 +1,8 @@
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel
+from models import UserCreate
 import bcrypt
 from models import Usuario
 from services import create_user, get_user_by_email_or_username
-
-class UserCreate(BaseModel):
-    username: str
-    password: str
-    correo: str
-    role_id: int
 
 register_route = APIRouter()
 

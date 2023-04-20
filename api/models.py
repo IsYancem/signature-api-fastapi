@@ -38,3 +38,19 @@ class ArchivoFirmado(BaseModel):
     fecha_hora_firma: str
     firma_id: int
     usuario_id: int
+
+
+
+#Esto estoy utilizando xd
+class UpdatePassword(BaseModel):
+    new_password: str
+    new_password_confirmation: str 
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    correo: str
+    role_id: int
+
+class SignaturesByName(BaseModel):
+    signature_name: str

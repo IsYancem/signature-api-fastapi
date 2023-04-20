@@ -7,11 +7,6 @@ from models import Firma
 from services import create_firma
 from login import get_current_user
 
-class SignatureCreate(BaseModel):
-    nombre: str
-    archivo_p12: UploadFile
-    contrasena_p12: str
-    usuario_id: str
 
 register_signature_route = APIRouter()
 
@@ -29,8 +24,6 @@ async def register_signature(
     cipher_suite = Fernet(key)
     encrypted_password = cipher_suite.encrypt(contrasena_p12.encode("utf-8"))
     encrypted_p12_file = cipher_suite.encrypt(archivo_p12.file.read())
-    
-
 
     api_key = secrets.token_hex(32)
     new_firma = Firma(
