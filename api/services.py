@@ -1,8 +1,9 @@
 from database import connect
-from models import Usuario, Firma, ArchivoFirmado, TokenSesion
+from models import Usuario, Firma, TokenSesion
+from models2 import ArchivoFirmado
+from database2 import SessionLocal
 from datetime import datetime, timedelta
 import bcrypt
-
 
 JWT_EXP_DELTA_SECONDS = 3600*24  # 1 hora
 
@@ -33,8 +34,8 @@ def create_firma(firma: Firma):
     cursor = connection.cursor()
 
     # Insertar la firma en la base de datos usando la cadena base64
-    query = "INSERT INTO Firmas (nombre, archivo_p12, contrasena_p12, token_p12, usuario_id) VALUES (%s, %s, %s, %s, %s);"
-    data = (firma.nombre, firma.archivo_p12, firma.contrasena_p12, firma.token_p12, firma.usuario_id)
+    query = "INSERT INTO Firmas (nombre, archivo_p12, contrasena_p12, token_p12, clave_cifrado, usuario_id) VALUES (%s, %s, %s, %s, %s, %s);"
+    data = (firma.nombre, firma.archivo_p12, firma.contrasena_p12, firma.token_p12, firma.clave_cifrado, firma.usuario_id)
     cursor.execute(query, data)
 
     connection.commit()
@@ -53,14 +54,12 @@ def get_firmas_by_user(user_id: int):
     return result
 
 # Servicio para agregar un archivo firmado
-def create_archivo_firmado(archivo_firmado: ArchivoFirmado):
-    connection = connect()
-    cursor = connection.cursor()
-    query = f"INSERT INTO ArchivosFirmados (nombre_archivo, fecha_hora_firma, firma_id, usuario_id) VALUES ('{archivo_firmado.nombre_archivo}', '{archivo_firmado.fecha_hora_firma}', {archivo_firmado.firma_id}, {archivo_firmado.usuario_id});"
-    cursor.execute(query)
-    connection.commit()
-    cursor.close()
-    connection.close()
+def create_archivo_firmado(archivofirmado: ArchivoFirmado):
+    db = SessionLocal()
+    db.add(archivofirmado)
+    db.commit()
+    db.refresh(archivofirmado)
+    db.close()
 
 # Servicio para obtener los archivos firmados de un usuario
 def get_archivos_firmados_by_user(user_id: int):
