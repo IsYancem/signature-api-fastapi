@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from fastapi import Form, Body
 
 # Modelo de Roles
 class Role(BaseModel):
@@ -52,5 +53,3 @@ class UserCreate(BaseModel):
     correo: str
     role_id: int
 
-class SignaturesByName(BaseModel):
-    signature_name: str

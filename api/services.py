@@ -1,8 +1,6 @@
 from database import connect
 from models import Usuario, Firma, ArchivoFirmado, TokenSesion
 from datetime import datetime, timedelta
-import bcrypt
-
 
 JWT_EXP_DELTA_SECONDS = 3600*24  # 1 hora
 
