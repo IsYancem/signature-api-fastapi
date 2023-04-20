@@ -36,7 +36,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> Optional[dict
     except jwt.PyJWTError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"No autorizado ={e}")
 
-
 @login_router.post("/login")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     if not form_data.username or not form_data.password:

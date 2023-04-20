@@ -30,6 +30,7 @@ class Firma(BaseModel):
     archivo_p12: bytes
     contrasena_p12: bytes
     token_p12: str
+    clave_cifrado: str
     usuario_id: int
 
 # Modelo de ArchivosFirmados
@@ -39,8 +40,6 @@ class ArchivoFirmado(BaseModel):
     fecha_hora_firma: str
     firma_id: int
     usuario_id: int
-
-
 
 #Esto estoy utilizando xd
 class UpdatePassword(BaseModel):

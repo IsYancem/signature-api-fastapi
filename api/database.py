@@ -6,7 +6,7 @@ import mysql.connector
 def connect():
     config = {
         'user': 'root',
-        'password': 'admin',
+        'password': '',
         'host': 'localhost',
         'database': 'signerpulpo'
     }
