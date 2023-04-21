@@ -106,7 +106,7 @@ def sign_xml(xml_file, p12_file, p12_password, output_file):
 def generate_signed_file_url(file_basename: str) -> str:
     #base_url = "https://pulpo.agency"
     base_url = "http://localhost:8000"
-    signed_file_path = f"/firmados/Firmado_{file_basename}.xml"  # se agrega la extensión .xml al final del nombre del archivo
+    signed_file_path = f"/firmados/{file_basename}"  # se agrega la extensión .xml al final del nombre del archivo
     return f"{base_url}{signed_file_path}"
 
 sign_route = APIRouter()
@@ -176,7 +176,10 @@ async def sign_xml_api(
             shutil.copyfileobj(xml_file.file, xml_tempfile)
             xml_tempfile_path = xml_tempfile.name
 
-        output_file = "firmados/Firmado_" + nombre_archivo + ".xml"
+        nombre_archivo_final = f"{nombre_archivo}_{xml_file.filename}"
+        output_file = "firmados/" + nombre_archivo_final
+
+        #output_file = "firmados/" + nombre_archivo + ".xml"
 
         sign_xml(xml_tempfile_path, 'archivo_p12_descifrado.p12', contrasena_p12, output_file)
 
@@ -209,7 +212,8 @@ async def sign_xml_api(
             signed_file_content = signed_file.read()
 
         archivo_firmado = ArchivoFirmado(
-            nombre_archivo=nombre_archivo + ".xml",
+            #nombre_archivo=nombre_archivo + ".xml",
+            nombre_archivo=nombre_archivo_final,
             fecha_hora_firma=datetime.now(),
             archivo_firmado=signed_file_content,
             firma_id=firma.id,
@@ -230,7 +234,7 @@ async def sign_xml_api(
         os.unlink('archivo_p12_descifrado.p12')
 
     # 5. Devolver la URL del archivo firmado
-    signed_file_url = generate_signed_file_url(nombre_archivo)
+    signed_file_url = generate_signed_file_url(nombre_archivo_final)
 
     return JSONResponse(
         content={

@@ -52,3 +52,9 @@ class UserCreate(BaseModel):
     correo: str
     role_id: int
 
+# Obtener Informacion sobre el usuario
+class UsuarioInfo(BaseModel):
+    username: str
+    correo: str
+    nombre_rol: str
+

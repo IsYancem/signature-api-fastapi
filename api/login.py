@@ -9,7 +9,7 @@ from typing import Optional
 
 JWT_SECRET_KEY = "jwt_secret_key"
 JWT_ALGORITHM = "HS256"
-JWT_EXP_DELTA_SECONDS = 3600*24  # 1 hora
+JWT_EXP_DELTA_SECONDS = 3600 * 24  # 1 dia
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 login_router = APIRouter()

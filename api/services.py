@@ -1,10 +1,13 @@
 from database import connect
-from models import Usuario, Firma, TokenSesion
+from models import Usuario, Firma, TokenSesion, Role
 from models2 import ArchivoFirmado
 from database2 import SessionLocal
 from datetime import datetime, timedelta
+from sqlalchemy.orm import Session
+from typing import Optional
 
-JWT_EXP_DELTA_SECONDS = 3600*24  # 1 hora
+JWT_EXP_DELTA_SECONDS = 3600*24  # 1 dia
+
 
 # Servicio para agregar un usuario
 def create_user(user: Usuario):
@@ -80,6 +83,20 @@ def get_user_by_username(username):
     cursor.close()
     cnx.close()
     return result
+
+def get_role_name_by_id(role_id):
+    cnx = connect()
+    cursor = cnx.cursor()
+    query = "SELECT nombre FROM Roles WHERE id = %s"
+    cursor.execute(query, (role_id,))
+    result = cursor.fetchone()
+    cursor.close()
+    cnx.close()
+    if result:
+        return result[0]
+    else:
+        return None
+
 
 def get_user_by_email(email):
     cnx = connect()
