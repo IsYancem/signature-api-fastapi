@@ -74,30 +74,6 @@ def get_archivos_firmados_by_user(user_id: int):
     connection.close()
     return result
 
-def get_user_by_username(username):
-    cnx = connect()
-    cursor = cnx.cursor()
-    query = "SELECT * FROM usuarios WHERE username = %s"
-    cursor.execute(query, (username,))
-    result = cursor.fetchone()
-    cursor.close()
-    cnx.close()
-    return result
-
-def get_role_name_by_id(role_id):
-    cnx = connect()
-    cursor = cnx.cursor()
-    query = "SELECT nombre FROM Roles WHERE id = %s"
-    cursor.execute(query, (role_id,))
-    result = cursor.fetchone()
-    cursor.close()
-    cnx.close()
-    if result:
-        return result[0]
-    else:
-        return None
-
-
 def get_user_by_email(email):
     cnx = connect()
     cursor = cnx.cursor()
@@ -201,3 +177,53 @@ def update_api_token_by_name_and_user_id(name: str, api_key: str, user_id: int):
     cursor.close()
     connection.close()
     return updated_rows, api_key
+
+# Obtener informacion de un usuario por medio de su username
+def get_user_by_username(username):
+    cnx = connect()
+    cursor = cnx.cursor()
+    query = "SELECT * FROM usuarios WHERE username = %s"
+    cursor.execute(query, (username,))
+    result = cursor.fetchone()
+    cursor.close()
+    cnx.close()
+    return result
+
+# Obtener el nombre de un rol a traves de id 
+def get_role_name_by_id(role_id):
+    cnx = connect()
+    cursor = cnx.cursor()
+    query = "SELECT nombre FROM Roles WHERE id = %s"
+    cursor.execute(query, (role_id,))
+    result = cursor.fetchone()
+    cursor.close()
+    cnx.close()
+    if result:
+        return result[0]
+    else:
+        return None
+    
+# Obtener informacion de un usuario por medio de su username
+def get_archivos_by_user(user_id):
+    cnx = connect()
+    cursor = cnx.cursor()
+    query = "SELECT * FROM archivosfirmados WHERE usuario_id = %s"
+    cursor.execute(query, (user_id,))
+    result = cursor.fetchone()
+    cursor.close()
+    cnx.close()
+    return result
+
+# Obtener el nombre de una firma a traves de id 
+def get_firma_name_by_id(firma_id):
+    cnx = connect()
+    cursor = cnx.cursor()
+    query = "SELECT nombre FROM Firmas WHERE id = %s"
+    cursor.execute(query, (firma_id,))
+    result = cursor.fetchone()
+    cursor.close()
+    cnx.close()
+    if result:
+        return result[0]
+    else:
+        return None

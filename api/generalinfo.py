@@ -5,10 +5,7 @@ import secrets
 from models import UpdatePassword
 import bcrypt
 
-
-
 info_signature_route = APIRouter()
-
 
 @info_signature_route.get("/user-signatures")
 async def get_user_signatures(current_user: dict = Depends(get_current_user)):

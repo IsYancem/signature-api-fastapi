@@ -7,6 +7,7 @@ from login import login_router
 from registerSignature import register_signature_route
 from generalinfo import info_signature_route
 from Read.userInfo import userInfo_router
+from Read.signedByUser import signed_by_user_route
 
 app = FastAPI()
 
@@ -20,6 +21,7 @@ app.include_router(login_router)
 app.include_router(register_signature_route)
 app.include_router(info_signature_route)
 app.include_router(userInfo_router)
+app.include_router(signed_by_user_route)
 
 app.add_middleware(
     CORSMiddleware,
