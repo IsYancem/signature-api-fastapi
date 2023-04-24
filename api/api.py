@@ -11,6 +11,7 @@ from Read.signedByUser import signed_by_user_route
 from Delete.removeSigned import remove_signed_route
 from firmados.sendFiles import send_files_route
 from Read.showUsers import show_users_route
+from Delete.deleteUser import delete_user_route
 
 app = FastAPI()
 
@@ -34,6 +35,9 @@ app.include_router(send_files_route)
 
 # Ruta para mostrar los usuarios al Admin
 app.include_router(show_users_route)
+
+# Ruta para eliminar uno o varios usuarios
+app.include_router(delete_user_route)
 
 app.add_middleware(
     CORSMiddleware,
