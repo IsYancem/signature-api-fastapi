@@ -33,7 +33,7 @@ async def download_file(id: int, current_user: dict = Depends(get_current_user))
         nombre_archivo = archivo_firmado.nombre_archivo
         archivo_firmado_bytes = archivo_firmado.archivo_firmado
 
-        return Response(content=archivo_firmado_bytes, media_type='application/octet-stream', headers={"Content-Disposition": f"attachment; filename*=UTF-8''{nombre_archivo}"})
+        return Response(content=archivo_firmado_bytes, media_type='application/octet-stream', headers={"Content-Disposition": f"attachment; filename={nombre_archivo}"})
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener archivo firmado: {str(e)}")
