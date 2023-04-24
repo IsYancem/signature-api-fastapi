@@ -61,6 +61,7 @@ class UsuarioInfo(BaseModel):
 
 # Obtener Informacion sobre firmas de un usuario
 class SignedFile(BaseModel):
+    id: Optional[int]
     nombre_archivo: str
     fecha_hora_firma: str
     nombre_firma: str

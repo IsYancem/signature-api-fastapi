@@ -177,8 +177,12 @@ async def sign_xml_api(
             xml_tempfile_path = xml_tempfile.name
 
         nombre_archivo_final = f"{nombre_archivo}_{xml_file.filename}"
+        #output_file = "firmados/" + nombre_archivo_final
 
-        sign_xml(xml_tempfile_path, 'archivo_p12_descifrado.p12', contrasena_p12, nombre_archivo_final)
+        with NamedTemporaryFile(suffix=".xml", delete=False) as temp_file:
+            output_file = temp_file.name
+
+        sign_xml(xml_tempfile_path, 'archivo_p12_descifrado.p12', contrasena_p12, output_file)
 
     except FileNotFoundError:
         logging.error("Archivo no encontrado")
@@ -204,7 +208,6 @@ async def sign_xml_api(
         )
 
     # 4. Guardar el archivo firmado en la tabla ArchivosFirmados
-    output_file = nombre_archivo_final + ".xml"
     try:
         with open(output_file, "rb") as signed_file:
             signed_file_content = signed_file.read()
@@ -228,13 +231,14 @@ async def sign_xml_api(
         )
 
     finally:
+        os.unlink(output_file)
         os.unlink(xml_tempfile_path)
         os.unlink('archivo_p12_descifrado.p12')
 
     return JSONResponse(
         content={
             "status": "ok",
-            "mensaje": "La factura se firmó de manera exitosa!"
+            "mensaje": "La factura se firmó de manera exitosa!",
         }
     )
 
