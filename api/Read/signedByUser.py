@@ -18,6 +18,7 @@ async def get_signed_files(current_user: dict = Depends(get_current_user)):
     
     try:
         archivosfirmados = db.query(
+            ArchivoFirmado.id,
             ArchivoFirmado.nombre_archivo,
             ArchivoFirmado.fecha_hora_firma,
             Firma.nombre.label("nombre_firma")
@@ -31,6 +32,7 @@ async def get_signed_files(current_user: dict = Depends(get_current_user)):
         signed_files = []
         for archivo_firmado in archivosfirmados:
             signed_files.append(SignedFile(
+                id=archivo_firmado.id,
                 nombre_archivo=archivo_firmado.nombre_archivo,
                 fecha_hora_firma=archivo_firmado.fecha_hora_firma.strftime("%Y-%m-%d %H:%M:%S"),
                 nombre_firma=archivo_firmado.nombre_firma
