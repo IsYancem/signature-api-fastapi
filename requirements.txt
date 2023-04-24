@@ -4,3 +4,15 @@ lxml
 xmlsig
 cryptography
 xades
+OpenSSL
+python-jose
+PyJWT
+crypto
+SQLAlchemy
+PyMySQL
+passlib
+pydantic
+mysql-connector-python
+mysql
+python-multipart
+bcrypt

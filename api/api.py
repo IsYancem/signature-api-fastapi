@@ -8,6 +8,9 @@ from registerSignature import register_signature_route
 from generalinfo import info_signature_route
 from Read.userInfo import userInfo_router
 from Read.signedByUser import signed_by_user_route
+from Delete.removeSigned import remove_signed_route
+from firmados.sendFiles import send_files_route
+from Read.showUsers import show_users_route
 
 app = FastAPI()
 
@@ -22,6 +25,15 @@ app.include_router(register_signature_route)
 app.include_router(info_signature_route)
 app.include_router(userInfo_router)
 app.include_router(signed_by_user_route)
+
+# Rutas para eliminar registros
+app.include_router(remove_signed_route)
+
+# Ruta para enviar al correo
+app.include_router(send_files_route)
+
+# Ruta para mostrar los usuarios al Admin
+app.include_router(show_users_route)
 
 app.add_middleware(
     CORSMiddleware,
