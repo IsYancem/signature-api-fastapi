@@ -17,6 +17,7 @@ from Delete.removeSigned import remove_signed_route
 # Firmados
 from firmados.sendFiles import send_files_route
 from firmados.downloadFile import download_file_route
+from managmentPlans import get_roles_route, update_role_route
 
 app = FastAPI()
 
@@ -50,6 +51,9 @@ app.include_router(delete_user_route)
 
 # Ruta para descargar archivo(s) firmado(s)
 app.include_router(download_file_route)
+
+app.include_router(get_roles_route)
+app.include_router(update_role_route)
 
 app.add_middleware(
     CORSMiddleware,
