@@ -6,8 +6,7 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from typing import Optional
 
-JWT_EXP_DELTA_SECONDS = 3600*24  # 1 dia
-
+JWT_EXP_DELTA_SECONDS = 3600 * 24  # 1 dia
 
 # Servicio para agregar un usuario
 def create_user(user: Usuario):
@@ -36,8 +35,8 @@ def create_firma(firma: Firma):
     cursor = connection.cursor()
 
     # Insertar la firma en la base de datos usando la cadena base64
-    query = "INSERT INTO Firmas (nombre, archivo_p12, contrasena_p12, token_p12, clave_cifrado, usuario_id) VALUES (%s, %s, %s, %s, %s, %s);"
-    data = (firma.nombre, firma.archivo_p12, firma.contrasena_p12, firma.token_p12, firma.clave_cifrado, firma.usuario_id)
+    query = "INSERT INTO Firmas (nombre, archivo_p12, contrasena_p12, token_p12, clave_cifrado, usuario_id, fecha_caducidad) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+    data = (firma.nombre, firma.archivo_p12, firma.contrasena_p12, firma.token_p12, firma.clave_cifrado, firma.usuario_id, firma.fecha_caducidad)
     cursor.execute(query, data)
 
     connection.commit()

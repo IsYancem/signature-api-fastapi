@@ -7,7 +7,6 @@ from typing import Optional
 
 from models import ArchivoFirmado, Firma, TokenSesion, Usuario, Role
 
-
 Base = declarative_base()
 
 class SignedFile:

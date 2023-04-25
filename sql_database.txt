@@ -7,8 +7,6 @@ CREATE TABLE Roles (
     nombre VARCHAR(50) NOT NULL
 );
 
-INSERT INTO Roles (nombre) VALUES ('Administrador'), ('Usuario Normal'), ('Usuario Premium');
-
 CREATE TABLE Usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -35,9 +33,9 @@ CREATE TABLE Firmas (
     token_p12 VARCHAR(255) NOT NULL,
     clave_cifrado TEXT NOT NULL,
     usuario_id INT,
+    fecha_caducidad DATETIME NOT NULL,
     FOREIGN KEY (usuario_id) REFERENCES Usuarios (id)
 );
-
 
 CREATE TABLE ArchivosFirmados (
     id INT AUTO_INCREMENT PRIMARY KEY,

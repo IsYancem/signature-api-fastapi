@@ -148,7 +148,7 @@ async def sign_xml_api(
             status_code=400,
             content={"detalle": "API key inválido o no corresponde al usuario"},
         )
-
+    
     # 3. Recuperar archivo_p12 y contrasena_p12 de la tabla firmas
     cipher_suite = Fernet(clave_cifrado.encode("utf-8"))
     archivo_p12 = cipher_suite.decrypt(firma.archivo_p12)

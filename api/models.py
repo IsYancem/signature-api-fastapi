@@ -25,13 +25,14 @@ class TokenSesion(BaseModel):
 
 # Modelo de Firmas
 class Firma(BaseModel):
-    id: Optional[int]
+    id: Optional[int] = None
     nombre: str
     archivo_p12: bytes
     contrasena_p12: bytes
     token_p12: str
     clave_cifrado: str
     usuario_id: int
+    fecha_caducidad: Optional[str] = None
 
 # Modelo de ArchivosFirmados
 class ArchivoFirmado(BaseModel):
