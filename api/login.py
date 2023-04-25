@@ -61,4 +61,4 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     # Creamos o actualizamos el token de sesión
     create_or_update_session_token(user[0], token)
 
-    return {'token': token}
+    return {'token': token, "role_id": user[5]}
