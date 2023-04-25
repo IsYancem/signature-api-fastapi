@@ -1,33 +1,23 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from signup import register_route
+from login import login_router
+from registerSignature import register_signature_route
 from generalinfo import info_signature_route
-
-# Gestión de Crear
-from Create.registerSignature import register_signature_route
-from Create.login import login_router
-from Create.signup import register_route
-from Create.signFile import sign_route, sign_route_api
-
-# Gestión de Read
+# Crear
+from signFile import sign_route, sign_route_api
+# Read
 from Read.userInfo import userInfo_router
-from Read.userSignatures import userSignatures_route
 from Read.signedByUser import signed_by_user_route
 from Read.showUsers import show_users_route
-
-# Gestión de Delete
+# Delete
 from Delete.deleteUser import delete_user_route
 from Delete.removeSigned import remove_signed_route
-from Delete.deleteSignature import deleteSignature_route
-
-# Gestión de Firmados
-from Firmados.sendFiles import send_files_route
-from Firmados.downloadFile import download_file_route
-
-# Gestión de Actualizar
-from Update.updateUserPassword import updateUserPassword_route
-
-from managmentPlans import get_roles_route
+# Firmados
+from firmados.sendFiles import send_files_route
+from firmados.downloadFile import download_file_route
+from managmentPlans import get_roles_route, update_role_route
 
 app = FastAPI()
 
@@ -38,7 +28,6 @@ app.mount("/firmados", StaticFiles(directory="firmados"), name="firmados")
 # Crear archivo firmado solo con xml, p12 y password
 app.include_router(sign_route_api)
 
-
 # Crear
 app.include_router(sign_route) # Firmar archivos con api_key y el xml
 app.include_router(register_route) # Registrar usuario
@@ -48,13 +37,8 @@ app.include_router(info_signature_route) # Obtener informacion de firma
 app.include_router(userInfo_router) # Obtener informacion de usuario
 app.include_router(signed_by_user_route) # Obtener archivos firmados por usuario
 
-# Rutas para eliminar registros - DELETE
-app.include_router(remove_signed_route) # Borrar archivos firmados - Usuario
-app.include_router(deleteSignature_route) # Borrar firma - Usuario
-
-# Rutas para actualizar registros - UPDATE
-app.include_router(updateUserPassword_route) # Actualizar password - Usuario
-app.include_router(get_roles_route) # Actualizar Roles - Administrador
+# Rutas para eliminar registros
+app.include_router(remove_signed_route)
 
 # Ruta para enviar al correo
 app.include_router(send_files_route)
@@ -68,8 +52,8 @@ app.include_router(delete_user_route)
 # Ruta para descargar archivo(s) firmado(s)
 app.include_router(download_file_route)
 
-# Rutas para listar
-app.include_router(userSignatures_route) # Listar firmas de un usuario
+app.include_router(get_roles_route)
+app.include_router(update_role_route)
 
 app.add_middleware(
     CORSMiddleware,
