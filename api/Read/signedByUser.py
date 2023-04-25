@@ -2,9 +2,8 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from datetime import datetime
 from typing import List, Optional
 from dependencies import get_current_user
-from database2 import SessionLocal
-from models import TokenSesion, SignedFile
-from models2 import ArchivoFirmado, Firma
+from database import SessionLocal
+from models import ArchivoFirmado, Firma, TokenSesion, SignedFile
 
 signed_by_user_route = APIRouter()
 

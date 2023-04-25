@@ -3,8 +3,8 @@ from typing import List
 
 from pydantic import BaseModel
 from dependencies import get_current_user
-from database2 import SessionLocal
-from models2 import Usuario, TokenSesion, ArchivoFirmado, Firma
+from database import SessionLocal
+from models import Usuario, TokenSesion, ArchivoFirmado, Firma
 from sqlalchemy.orm import Session
 
 delete_user_route = APIRouter()

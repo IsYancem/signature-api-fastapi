@@ -1,9 +1,9 @@
 from typing import List
 from fastapi import APIRouter, Depends, Header, HTTPException
 from dependencies import get_current_user
-from database2 import SessionLocal
+from database import SessionLocal
 from models import TokenSesion
-from models2 import ArchivoFirmado
+from models import ArchivoFirmado
 from pydantic import BaseModel
 import smtplib
 from email.mime.text import MIMEText

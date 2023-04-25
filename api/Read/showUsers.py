@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from dependencies import get_current_user
-from database2 import SessionLocal
-from models2 import Usuario, Role
+from database import SessionLocal
+from models import Usuario, Role
 
 show_users_route = APIRouter()
 

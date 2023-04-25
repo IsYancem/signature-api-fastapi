@@ -1,7 +1,7 @@
 from database import connect
-from models import Usuario, Firma, TokenSesion, Role
-from models2 import ArchivoFirmado
-from database2 import SessionLocal
+#from models import Usuario, Firma, TokenSesion, Role
+from models import ArchivoFirmado, Usuario, Firma, TokenSesion, Role
+from database import SessionLocal
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -106,44 +106,48 @@ def create_or_update_session_token(user_id: int, token: str):
 
     if result is None:
         # Si no hay un token de sesión existente, crear uno nuevo
-        query = f"INSERT INTO TokensSesion (token, fecha_expiracion, usuario_id) VALUES ('{token_sesion.token}', '{token_sesion.fecha_expiracion}', {token_sesion.usuario_id});"
-        cursor.execute(query)
+        query = "INSERT INTO TokensSesion (token, fecha_expiracion, usuario_id) VALUES (%s, %s, %s);"
+        cursor.execute(query, (token_sesion.token, token_sesion.fecha_expiracion, token_sesion.usuario_id))
     else:
         # Si ya hay un token de sesión existente, actualizarlo
-        query = f"UPDATE TokensSesion SET token = '{token_sesion.token}', fecha_expiracion='{token_sesion.fecha_expiracion}'  WHERE usuario_id = {user_id};"
-        cursor.execute(query)
-
+        query = "UPDATE TokensSesion SET token = %s, fecha_expiracion = %s WHERE usuario_id = %s;"
+        cursor.execute(query, (token_sesion.token, token_sesion.fecha_expiracion, user_id))
+        
     connection.commit()
     cursor.close()
     connection.close()
-
 
 # Esta funcion obtiene firmas por id de usuario
 def get_firmas_by_user_id(user_id: int):
     connection = connect()
     cursor = connection.cursor()
     firmas = []
-    query = "SELECT id, nombre FROM firmas WHERE usuario_id = %s" 
+    query = "SELECT id, nombre, fecha_caducidad FROM firmas WHERE usuario_id = %s" 
     result = cursor.execute(query, (user_id,))
 
     for row in cursor:  # Cambia 'result' por 'cursor'
-        firmas.append({"id": row[0], "name": row[1]})
+        firmas.append({"id": row[0], "name": row[1], "fecha_caducidad": row[2]})
 
     return firmas
-
 
 #Esta funcion elimina firmas por id 
 def delete_firma_by_id(signature_id: int, user_id: int):
     connection = connect()
     cursor = connection.cursor()
-    query = f"DELETE FROM Firmas WHERE id = {signature_id} AND usuario_id = {user_id};"
-    cursor.execute(query)
+
+    # Elimina las filas en la tabla 'archivosfirmados' que hacen referencia a la 'firma_id'
+    query_delete_archivosfirmados = f"DELETE FROM ArchivosFirmados WHERE firma_id = {signature_id};"
+    cursor.execute(query_delete_archivosfirmados)
+
+    # Elimina la fila en la tabla 'Firmas'
+    query_delete_firma = f"DELETE FROM Firmas WHERE id = {signature_id} AND usuario_id = {user_id};"
+    cursor.execute(query_delete_firma)
+
     deleted_rows = cursor.rowcount
     connection.commit()
     cursor.close()
     connection.close()
     return deleted_rows
-
 
 # Función para actualizar la contraseña de un usuario
 def update_user_password(user_id: int, new_password: str):
@@ -159,8 +163,8 @@ def update_user_password(user_id: int, new_password: str):
 def get_api_token_by_name_and_user_id(name: str, user_id: int):
     connection = connect()
     cursor = connection.cursor()
-    query = f"SELECT token_p12 FROM Firmas WHERE nombre = '{name}' AND usuario_id = {user_id};"
-    cursor.execute(query)
+    query = "SELECT token_p12 FROM Firmas WHERE nombre = %(name)s AND usuario_id = %(user_id)s;"
+    cursor.execute(query, {'name': name, 'user_id': user_id})
     result = cursor.fetchone()
     cursor.close()
     connection.close()

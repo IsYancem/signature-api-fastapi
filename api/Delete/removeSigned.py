@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from dependencies import get_current_user
-from database2 import SessionLocal
-from models import TokenSesion
-from models2 import ArchivoFirmado
+from database import SessionLocal
+from models import ArchivoFirmado, TokenSesion
 from typing import List
 
 remove_signed_route = APIRouter()

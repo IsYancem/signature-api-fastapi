@@ -1,52 +1,73 @@
-from pydantic import BaseModel
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, LargeBinary, BLOB, Boolean, Text
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+
+from datetime import datetime
 from typing import Optional
+from pydantic import BaseModel
 from fastapi import Form, Body
 
-# Modelo de Roles
-class Role(BaseModel):
-    id: Optional[int]
-    nombre: str
+# from models import ArchivoFirmado, Firma, TokenSesion, Usuario, Role
 
-# Modelo de Usuarios
-class Usuario(BaseModel):
-    id: Optional[int]
-    username: str
-    password: str
-    correo: str
-    estado: bool
-    role_id: int
+Base = declarative_base()
 
-# Modelo de TokensSesion
-class TokenSesion(BaseModel):
-    id: Optional[int]
-    token: str
-    fecha_expiracion: str
-    usuario_id: int
+class SignedFile:
+    def __init__(
+        self, 
+        nombre_archivo: str, 
+        fecha_hora_firma: datetime, 
+        nombre_firma: str
+    ):
+        self.nombre_archivo = nombre_archivo
+        self.fecha_hora_firma = fecha_hora_firma
+        self.nombre_firma = nombre_firma
 
-# Modelo de Firmas
-class Firma(BaseModel):
-    id: Optional[int] = None
-    nombre: str
-    archivo_p12: bytes
-    contrasena_p12: bytes
-    token_p12: str
-    clave_cifrado: str
-    usuario_id: int
-    fecha_caducidad: Optional[str] = None
 
-# Modelo de ArchivosFirmados
-class ArchivoFirmado(BaseModel):
-    id: Optional[int]
-    nombre_archivo: str
-    fecha_hora_firma: str
-    archivo_firmado: bytes
-    firma_id: int
-    usuario_id: int
+class ArchivoFirmado(Base):
+    __tablename__ = "ArchivosFirmados"
 
-#Esto estoy utilizando xd
-class UpdatePassword(BaseModel):
-    new_password: str
-    new_password_confirmation: str 
+    id = Column(Integer, primary_key=True, index=True)
+    nombre_archivo = Column(String(255), nullable=False)
+    fecha_hora_firma = Column(DateTime, nullable=False)
+    firma_id = Column(Integer, ForeignKey("Firmas.id"))
+    usuario_id = Column(Integer, ForeignKey("Usuarios.id"))
+    archivo_firmado = Column(BLOB, nullable=False)
+
+class Firma(Base):
+    __tablename__ = "Firmas"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(50), nullable=False)
+    archivo_p12 = Column(BLOB, nullable=False)
+    contrasena_p12 = Column(BLOB, nullable=False)
+    token_p12 = Column(String(255), nullable=False)
+    clave_cifrado = Column(Text, nullable=False)
+    usuario_id = Column(Integer, ForeignKey("Usuarios.id"))
+    fecha_caducidad = Column(DateTime, nullable=False)
+
+class TokenSesion(Base):
+    __tablename__ = "TokensSesion"
+
+    id = Column(Integer, primary_key=True, index=True)
+    token = Column(String(255), nullable=False)
+    fecha_expiracion = Column(DateTime, nullable=False)
+    usuario_id = Column(Integer, ForeignKey("Usuarios.id"))
+
+class Usuario(Base):
+    __tablename__ = "Usuarios"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, nullable=False)
+    password = Column(String(255), nullable=False)
+    correo = Column(String(100), unique=True, nullable=False)
+    estado = Column(Boolean, nullable=False)
+    role_id = Column(Integer, ForeignKey("Roles.id"))
+
+class Role(Base):
+    __tablename__ = "Roles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(50), nullable=False)
 
 class UserCreate(BaseModel):
     username: str
@@ -66,3 +87,8 @@ class SignedFile(BaseModel):
     nombre_archivo: str
     fecha_hora_firma: str
     nombre_firma: str
+
+#Esto estoy utilizando xd
+class UpdatePassword(BaseModel):
+    new_password: str
+    new_password_confirmation: str 
