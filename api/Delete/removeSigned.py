@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from dependencies import get_current_user
 from database2 import SessionLocal
 from models import TokenSesion
@@ -8,7 +8,7 @@ from typing import List
 remove_signed_route = APIRouter()
 
 @remove_signed_route.delete("/removeSigned")
-async def remove_signed_files(ids_archivos: List[int], current_user: dict = Depends(get_current_user)):
+async def remove_signed_files(ids_archivos: List[int] = Body(...), current_user: dict = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=401, detail="No autorizado, no existe el usuario activo")
 

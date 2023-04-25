@@ -13,10 +13,10 @@ async def show_users(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="No autorizado, no tiene permisos suficientes")
 
     db = SessionLocal()
-    usuarios = db.query(Usuario.username, Usuario.correo, Usuario.estado, Role.nombre).join(Role).all()
+    usuarios = db.query(Usuario.id,Usuario.username, Usuario.correo, Usuario.estado, Role.nombre).join(Role).all()
 
     usuarios_list = []
     for usuario in usuarios:
-        usuarios_list.append({"username": usuario[0], "correo": usuario[1], "estado": "activo" if usuario[2] else "inactivo", "rol": usuario[3]})
+        usuarios_list.append({"id": usuario[0], "username": usuario[1], "correo": usuario[2], "estado": "activo" if usuario[3] else "inactivo", "rol": usuario[4]})
 
     return {"usuarios": usuarios_list}
