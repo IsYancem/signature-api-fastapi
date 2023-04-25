@@ -47,3 +47,5 @@ CREATE TABLE ArchivosFirmados (
     FOREIGN KEY (firma_id) REFERENCES Firmas (id),
     FOREIGN KEY (usuario_id) REFERENCES Usuarios (id)
 );
+
+INSERT INTO Roles (nombre) VALUES ('Administrador'), ('Usuario Normal'), ('Usuario Premium');
