@@ -8,7 +8,7 @@ from cryptography.hazmat.backends import default_backend
 from tempfile import NamedTemporaryFile
 from fastapi import  HTTPException, File, UploadFile, Form,  APIRouter, Depends, Header
 from starlette.responses import JSONResponse
-from typing import Optional
+from typing import Optional, List
 from jose import jwt
 from config import SECRET_KEY, ALGORITHM
 from dependencies import get_current_user, TokenData
@@ -116,8 +116,8 @@ async def sign_xml_api(
     current_user: dict = Depends(get_current_user),
     api_key: str = Form(...),
     nombre_archivo: str = Form(...),
-    xml_file: UploadFile = File(...)):
-
+    xml_files: List[UploadFile] = File(...),
+):
     # 1. Autenticar si el usuario está autorizado
     if not current_user:
         raise HTTPException(status_code=401, detail="No autorizado, no existe el usuario activo")
@@ -128,11 +128,8 @@ async def sign_xml_api(
         return JSONResponse(status_code=e.status_code, content=e.detail)
 
     # 2. Autenticar que el API key enviado en el body es válido y corresponde a un registro en firmas
-    
-    # Crear una sesión de la base de datos
     db = SessionLocal()
 
-    # Obtener el registro de Firma correspondiente al api_key y usuario_id
     firma = (
         db.query(Firma)
         .filter(Firma.token_p12 == api_key)
@@ -140,99 +137,93 @@ async def sign_xml_api(
         .first()
     )
 
-    # Obtener la clave_cifrado del registro de Firma
-    clave_cifrado = firma.clave_cifrado
-
     if not firma:
         return JSONResponse(
             status_code=400,
             content={"detalle": "API key inválido o no corresponde al usuario"},
         )
-    
-    # 3. Recuperar archivo_p12 y contrasena_p12 de la tabla firmas
-    cipher_suite = Fernet(clave_cifrado.encode("utf-8"))
-    archivo_p12 = cipher_suite.decrypt(firma.archivo_p12)
-    contrasena_p12 = cipher_suite.decrypt(firma.contrasena_p12)
 
-    # Guardar el archivo descifrado
-    with open('archivo_p12_descifrado.p12', 'wb') as f:
-        f.write(archivo_p12)
+    # Obtener la clave_cifrado del registro de Firma
+    clave_cifrado = firma.clave_cifrado
 
-    # Verificar que se pueda abrir el archivo descifrado
-    with open('archivo_p12_descifrado.p12', 'rb') as f:
-        pkcs12.load_key_and_certificates(f.read(), contrasena_p12, default_backend())
+    # Recorrer los archivos cargados
+    archivos_firmados = []
+    for xml_file in xml_files:
+        try:
+            # Descifrar archivo_p12 y contrasena_p12 de la tabla firmas
+            cipher_suite = Fernet(clave_cifrado.encode("utf-8"))
+            archivo_p12_descifrado = cipher_suite.decrypt(firma.archivo_p12)
+            contrasena_p12_descifrado = cipher_suite.decrypt(firma.contrasena_p12)
 
-    # Proceder a firmar el archivo XML
-    if not xml_file:
-        return JSONResponse(
-            status_code=400,
-            content={
-                "detalles": [{"Status": "ERROR", "info": "El archivo XML es requerido"}]
-            },
-        )
+            # Guardar el archivo descifrado temporalmente
+            with NamedTemporaryFile(delete=False) as p12_tempfile:
+                p12_tempfile.write(archivo_p12_descifrado)
+                p12_tempfile_path = p12_tempfile.name
 
-    try:
-        with NamedTemporaryFile(delete=False) as xml_tempfile:
-            shutil.copyfileobj(xml_file.file, xml_tempfile)
-            xml_tempfile_path = xml_tempfile.name
+            with NamedTemporaryFile(delete=False) as xml_tempfile:
+                shutil.copyfileobj(xml_file.file, xml_tempfile)
+                xml_tempfile_path = xml_tempfile.name
 
-        nombre_archivo_final = f"{nombre_archivo}_{xml_file.filename}"
-        #output_file = "firmados/" + nombre_archivo_final
+            nombre_archivo_final = f"{nombre_archivo}_{xml_file.filename}"
+            output_file = "firmados/" + nombre_archivo_final
 
-        with NamedTemporaryFile(suffix=".xml", delete=False) as temp_file:
-            output_file = temp_file.name
+            sign_xml(xml_tempfile_path, p12_tempfile_path, contrasena_p12_descifrado, output_file)
 
-        sign_xml(xml_tempfile_path, 'archivo_p12_descifrado.p12', contrasena_p12, output_file)
+        except FileNotFoundError:
+            logging.error("Archivo no encontrado")
+            raise HTTPException(
+                status_code=400, detail="Archivos enviados como parámetros no encontrados"
+            )
+        except ValueError:
+            logging.error("Contraseña inválida")
+            raise HTTPException(status_code=400, detail="Contraseña del archivo p12 inválida")
+        except etree.XMLSyntaxError:
+            logging.error("Archivo XML mal formado")
+            raise HTTPException(status_code=400, detail="Archivo XML mal formado")
+        except etree.DocumentInvalid:
+            logging.error("Archivo XML no válido")
+            raise HTTPException(status_code=400, detail="Archivo XML no válido")
+        except Exception as e:
+            logging.error(f"Error durante la firma del archivo XML: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error durante la firma del archivo XML: {str(e)}",
+            )
+        finally:
+            # Eliminar archivo descifrado
+            if os.path.exists(p12_tempfile_path):
+                os.unlink(p12_tempfile_path)
 
-    except FileNotFoundError:
-        logging.error("Archivo no encontrado")
-        raise HTTPException(
-            status_code=400, detail="Archivos enviados como parámetros no encontrados"
-        )
-    except ValueError:
-        logging.error("Contraseña inválida")
-        raise HTTPException(status_code=400, detail="Contraseña del archivo p12 inválida")
-    except etree.XMLSyntaxError:
-        logging.error("Archivo XML mal formado")
-        raise HTTPException(
-            status_code=400, detail="Archivo XML mal formado"
-        )
-    except etree.DocumentInvalid:
-        logging.error("Archivo XML no válido")
-        raise HTTPException(status_code=400, detail="Archivo XML no válido")
-    except Exception as e:
-        logging.error(f"Error durante la firma del archivo XML: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error durante la firma del archivo XML: {str(e)}",
-        )
+        # 4. Guardar el archivo firmado en la tabla ArchivosFirmados
+        try:
+            with open(output_file, "rb") as signed_file:
+                signed_file_content = signed_file.read()
 
-    # 4. Guardar el archivo firmado en la tabla ArchivosFirmados
-    try:
-        with open(output_file, "rb") as signed_file:
-            signed_file_content = signed_file.read()
+            archivo_firmado = ArchivoFirmado(
+                nombre_archivo=nombre_archivo_final,
+                fecha_hora_firma=datetime.now(),
+                archivo_firmado=signed_file_content,
+                firma_id=firma.id,
+                usuario_id=current_user["id"],
+            )
 
-        archivo_firmado = ArchivoFirmado(
-            nombre_archivo=nombre_archivo_final,
-            fecha_hora_firma=datetime.now(),
-            archivo_firmado=signed_file_content,
-            firma_id=firma.id,
-            usuario_id=current_user["id"],
-        )
+            create_archivo_firmado(archivo_firmado)
 
-        create_archivo_firmado(archivo_firmado)
+        except Exception as e:
+            logging.error(f"Error al guardar el archivo firmado en la base de datos: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error al guardar el archivo firmado en la base de datos: {str(e)}",
+            )
 
-    except Exception as e:
-        logging.error(f"Error al guardar el archivo firmado en la base de datos: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error al guardar el archivo firmado en la base de datos: {str(e)}",
-        )
-
-    finally:
-        os.unlink(output_file)
-        os.unlink(xml_tempfile_path)
-        os.unlink('archivo_p12_descifrado.p12')
+        finally:
+            # Eliminar archivos temporales
+            if os.path.exists(output_file):
+                os.unlink(output_file)
+            if os.path.exists(xml_tempfile_path):
+                os.unlink(xml_tempfile_path)
+            if os.path.exists(p12_tempfile_path):
+                os.unlink(p12_tempfile_path)
 
     return JSONResponse(
         content={
@@ -240,6 +231,8 @@ async def sign_xml_api(
             "mensaje": "La factura se firmó de manera exitosa!",
         }
     )
+
+
 
 sign_route_api = APIRouter()
 
