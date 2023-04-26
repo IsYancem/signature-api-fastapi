@@ -7,8 +7,6 @@ from typing import Optional
 from pydantic import BaseModel
 from fastapi import Form, Body
 
-# from models import ArchivoFirmado, Firma, TokenSesion, Usuario, Role
-
 Base = declarative_base()
 
 class SignedFile:

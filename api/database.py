@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from urllib.parse import quote_plus
 
 user = 'root'
-password = '45567889-123'
+password = ''
 host = 'localhost'
 database = 'signerpulpo'
 
