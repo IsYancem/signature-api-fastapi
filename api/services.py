@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from database import connect
 from models import ArchivoFirmado, Usuario, Firma, TokenSesion, Role
 from database import SessionLocal
@@ -229,3 +230,15 @@ def get_firma_name_by_id(firma_id):
         return result[0]
     else:
         return None
+    
+# Obtener una firma por su id
+def get_firma_by_id(firma_id: int) -> Firma:
+    with SessionLocal() as db:
+        return db.query(Firma).filter(Firma.id == firma_id).first()
+
+# Actualizar el nombre de una firma
+def update_firma_nombre(firma_id: int, nombre: str) -> None:
+    with SessionLocal() as db:
+        firma = db.query(Firma).filter(Firma.id == firma_id).first()
+        firma.nombre = nombre
+        db.commit()

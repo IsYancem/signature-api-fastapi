@@ -23,6 +23,7 @@ from firmados.downloadFile import download_file_route
 # Actualizar
 from managmentPlans import get_roles_route, update_role_route
 from Update.updateUserPassword import updateUserPassword_route
+from Update.updateSignature import updateSignature_route
 
 app = FastAPI()
 
@@ -45,6 +46,7 @@ app.include_router(signed_by_user_route) # Obtener archivos firmados por usuario
 # Rutas para Actualizar registros
 app.include_router(update_role_route) # Actualizar el rol del usuario - Admin
 app.include_router(updateUserPassword_route) # Actualizar contraseña - Usuario
+app.include_router(updateSignature_route) # Actualizar el nombre de la firma - Usuario
 
 # Rutas para Eliminar registros
 app.include_router(remove_signed_route) # Eliminar archivo firmado - Usuario
