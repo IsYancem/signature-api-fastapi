@@ -118,7 +118,7 @@ async def sign_xml_api(
     current_user: dict = Depends(get_current_user),
     api_key: str = Form(...),
     nombre_archivo: str = Form(...),
-    xml_files: List[UploadFile] = File(...),
+    xml_files: List[UploadFile] = File([]),
     db: Session = Depends(get_db)):
 
     # 1. Autenticar si el usuario está autorizado
@@ -254,7 +254,7 @@ async def sign_xml_api(
 
 
 @sign_route.post("/sign-xml")
-async def sign_xml_api2(xml_files: List[UploadFile] = File(...), p12_file: UploadFile = File(...), p12_password: str = Form(...), current_user: dict = Depends(get_current_user)):
+async def sign_xml_api2(xml_files: List[UploadFile] = File([]), p12_file: UploadFile = File(...), p12_password: str = Form(...), current_user: dict = Depends(get_current_user)):
 
     if current_user["role_id"] != 1:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No autorizado")
