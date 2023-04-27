@@ -4,7 +4,9 @@ USE signerpulpo;
 
 CREATE TABLE Roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL
+    nombre VARCHAR(50) NOT NULL,
+    max_archivos INT DEFAULT NULL,
+    max_firmas INT DEFAULT NULL
 );
 
 CREATE TABLE Usuarios (
@@ -48,4 +50,16 @@ CREATE TABLE ArchivosFirmados (
     FOREIGN KEY (usuario_id) REFERENCES Usuarios (id)
 );
 
-INSERT INTO Roles (nombre) VALUES ('Administrador'), ('Usuario Normal'), ('Usuario Premium');
+INSERT INTO Roles (nombre, max_archivos, max_firmas) 
+VALUES ('Administrador', NULL, NULL), 
+       ('Usuario Normal', 10, 2), 
+       ('Usuario Premium', 20, 5);
+       
+INSERT INTO Usuarios (username, password, correo, estado, role_id)
+VALUES ('admin', 'mypassword', 'admin@example.com', 1, 1);
+
+SELECT * FROM Roles;
+SELECT * FROM Usuarios;
+SELECT * FROM ArchivosFirmados;
+SELECT * FROM TokensSesion;
+SELECT * FROM Firmas;
