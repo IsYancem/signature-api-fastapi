@@ -1,24 +1,31 @@
+from datetime import datetime
 import os
 import secrets
+import shutil
 import base64
-from datetime import datetime
+
 from fastapi import APIRouter, File, UploadFile, Depends, HTTPException, status, Form
-from pydantic import BaseModel
-from cryptography.fernet import Fernet
-from models import Firma
-from services import create_firma
-from dependencies import get_current_user
-from typing import Tuple
+from sqlalchemy.orm import Session
 from OpenSSL import crypto
+from typing import Tuple
+from cryptography.fernet import Fernet
+
+from models import Firma, Usuario, Role
+from dependencies import get_current_user 
+from services import create_firma
+from database import get_db
+
 
 register_signature_route = APIRouter()
+
 
 @register_signature_route.post("/register-signature", status_code=status.HTTP_201_CREATED)
 async def register_signature(
     nombre: str = Form(None),
     contrasena_p12: str = Form(None),
     archivo_p12: UploadFile = File(None),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     if not current_user:
         raise HTTPException(status_code=401, detail="No autorizado, no existe el usuario activo")
@@ -59,6 +66,24 @@ async def register_signature(
     # Guardar la fecha de caducidad en la base de datos
     fecha_caducidad = cert_expiry_date.strftime("%Y-%m-%d %H:%M:%S")
 
+    # Verificar límite de firmas por usuario
+    max_firmas = (
+        db.query(Role.max_firmas)
+        .join(Usuario, Usuario.role_id == Role.id)
+        .filter(Usuario.id == current_user["id"])
+        .scalar()
+    )
+    
+    if max_firmas is not None:
+        firmas_actuales = (
+            db.query(Firma)
+            .filter(Firma.usuario_id == current_user["id"])
+            .count()
+        )
+        
+        if firmas_actuales >= max_firmas:
+            raise HTTPException(status_code=400, detail=f"El usuario ha alcanzado el límite máximo de {max_firmas} firmas")
+
     api_key = secrets.token_hex(32)
     new_firma = Firma(
         nombre=nombre,
@@ -77,3 +102,4 @@ async def register_signature(
         "tiempo_restante": f"{time_to_expire.days} días, {time_to_expire.seconds//3600} horas y {(time_to_expire.seconds//60)%60} minutos para la caducidad",
         "fecha_caducidad": cert_expiry_date.strftime("%Y-%m-%d %H:%M:%S")
     }
+

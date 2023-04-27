@@ -3,6 +3,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 # JWToken
 from generalinfo import info_signature_route
+# Roles
+from Roles.showRoles import showRoles_route
 # Crear
 from Create.signup import register_route
 from Create.login import login_router
@@ -53,6 +55,9 @@ app.include_router(show_users_route) # Mostrar los usuarios existentes - Admin
 app.include_router(download_file_route) # Descargar archivo(s) firmado(s) - Usuario
 app.include_router(send_files_route) # Enviar archivo(s) firmado(s) al correo - Usuario
 app.include_router(userSignatures_route) # Mostrar las firmas de un usuario - Usuario
+
+# Rutas de la entidad Roles
+app.include_router(showRoles_route) # Mostrar roles - Admin
 
 app.add_middleware(
     CORSMiddleware,

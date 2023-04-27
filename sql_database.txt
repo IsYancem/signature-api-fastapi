@@ -55,9 +55,6 @@ VALUES ('Administrador', NULL, NULL),
        ('Usuario Normal', 10, 2), 
        ('Usuario Premium', 20, 5);
        
-INSERT INTO Usuarios (username, password, correo, estado, role_id)
-VALUES ('admin', 'mypassword', 'admin@example.com', 1, 1);
-
 SELECT * FROM Roles;
 SELECT * FROM Usuarios;
 SELECT * FROM ArchivosFirmados;
