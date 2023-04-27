@@ -18,8 +18,8 @@ from Delete.deleteUser import delete_user_route
 from Delete.removeSigned import remove_signed_route
 from Delete.deleteSignature import deleteSignature_route
 # Firmados
-from firmados.sendFiles import send_files_route
-from firmados.downloadFile import download_file_route
+from GestionFirmas.sendFiles import send_files_route
+from GestionFirmas.downloadFile import download_file_route
 # Actualizar
 from managmentPlans import get_roles_route, update_role_route
 from Update.updateUserPassword import updateUserPassword_route
