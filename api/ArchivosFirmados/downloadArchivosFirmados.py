@@ -6,9 +6,9 @@ from database import SessionLocal
 from models import ArchivoFirmado, Firma, TokenSesion, SignedFile
 import io
 
-download_file_route = APIRouter()
+downloadArchivosFirmados_route = APIRouter()
 
-@download_file_route.get("/downloadFile/{id}")
+@downloadArchivosFirmados_route.get("/downloadFile/{id}")
 async def download_file(id: int, current_user: dict = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=401, detail="No autorizado, no existe el usuario activo")

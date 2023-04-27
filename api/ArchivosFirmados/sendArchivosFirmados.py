@@ -22,13 +22,13 @@ load_dotenv()
 email_address = os.environ.get("EMAIL_ADDRESS")
 email_password = os.environ.get("EMAIL_PASSWORD")
 
-send_files_route = APIRouter()
+sendArchivosFirmados_route = APIRouter()
 
 class SendFile(BaseModel):
     id_archivos: List[int]
     destinatario: str
 
-@send_files_route.post("/sendFiles")
+@sendArchivosFirmados_route.post("/sendFiles")
 async def send_files(send_file: SendFile, current_user: dict = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=401, detail="No autorizado, no existe el usuario activo")

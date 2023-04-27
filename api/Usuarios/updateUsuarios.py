@@ -1,19 +1,58 @@
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+import bcrypt
+from services import update_user_password
 from dependencies import get_current_user
+from fastapi import APIRouter, Depends, HTTPException
+from models import UpdatePassword, Usuario, Role
+from pydantic import BaseModel
 from database import SessionLocal
-from models import Usuario, Role
 from datetime import datetime
 from sqlalchemy.orm import Session
 
-#Todo esto es para obtener todos los roles de los usuarios
-get_roles_route = APIRouter()
+
+updateUsuarios_route = APIRouter()
+
 
 def get_roles(db: Session):
     roles = db.query(Role).all()
     return roles
 
-@get_roles_route.get("/roles")
+
+class UpdateUserRole(BaseModel):
+    user_id: int
+    role_id: int
+
+
+
+def update_user_role_in_db(db: Session, user_id: int, role_id: int):
+    user = db.query(Usuario).filter(Usuario.id == user_id).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail=f"El usuario con id {user_id} no existe")
+
+    user.role_id = role_id
+    db.commit()
+
+
+
+# Actualizar contraseña de Usuario
+@updateUsuarios_route.post("/update_user_password")
+async def update_user_password_api(password: UpdatePassword, current_user: dict = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=401, detail="No autorizado, no existe el usuario activo")
+    
+    if password.new_password != password.new_password_confirmation:
+        raise HTTPException(status_code=400, detail="Las contraseñas no coinciden")
+    
+    # Cifrar la nueva contraseña
+    hashed_password = bcrypt.hashpw(password.new_password.encode("utf-8"), bcrypt.gensalt())
+
+    user_id = current_user["id"]
+    update_user_password(user_id, hashed_password.decode("utf-8"))
+    return {"message": "Contraseña actualizada exitosamente"}
+
+
+
+# Obtener los roles de un usuario
+@updateUsuarios_route.get("/roles")
 async def get_all_roles(current_user: dict = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=401, detail="No autorizado, no existe el usuario activo")
@@ -30,22 +69,8 @@ async def get_all_roles(current_user: dict = Depends(get_current_user)):
     finally:
         db.close()
 
-#Todo esto es para actualizar el rol de un usuario
-update_role_route = APIRouter()
-
-class UpdateUserRole(BaseModel):
-    user_id: int
-    role_id: int
-
-def update_user_role_in_db(db: Session, user_id: int, role_id: int):
-    user = db.query(Usuario).filter(Usuario.id == user_id).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail=f"El usuario con id {user_id} no existe")
-
-    user.role_id = role_id
-    db.commit()
-
-@update_role_route.put("/updateUserRole")
+# Actualizar el Rol de Usuario
+@updateUsuarios_route.put("/updateUserRole")
 async def update_user_role_route(update_user_role: UpdateUserRole, current_user: dict = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=401, detail="No autorizado, no existe el usuario activo")

@@ -2,9 +2,9 @@ from services import delete_firma_by_id
 from dependencies import get_current_user
 from fastapi import APIRouter, Depends, HTTPException
 
-deleteSignature_route = APIRouter()
+deleteFirmas_route = APIRouter()
 
-@deleteSignature_route.delete("/delete-signature/{signature_id}")
+@deleteFirmas_route.delete("/delete-signature/{signature_id}")
 async def delete_signature(signature_id: int, current_user: dict = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=401, detail="No autorizado, no existe el usuario activo")

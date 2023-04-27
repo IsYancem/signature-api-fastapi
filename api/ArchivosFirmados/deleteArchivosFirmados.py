@@ -4,9 +4,9 @@ from database import SessionLocal
 from models import ArchivoFirmado, TokenSesion
 from typing import List
 
-remove_signed_route = APIRouter()
+deleteArchivosFirmados_route = APIRouter()
 
-@remove_signed_route.delete("/removeSigned")
+@deleteArchivosFirmados_route.delete("/removeSigned")
 async def remove_signed_files(ids_archivos: List[int] = Body(...), current_user: dict = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=401, detail="No autorizado, no existe el usuario activo")

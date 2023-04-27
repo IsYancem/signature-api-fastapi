@@ -23,6 +23,8 @@ import logging
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+createArchivosFirmados_route = APIRouter()
+
 Base.metadata.create_all(bind=engine)
 
 def generate_short_id():
@@ -111,9 +113,9 @@ def sign_xml(xml_file, p12_file, p12_password, output_file):
         xml_declaration=True,
     )
 
-sign_route = APIRouter()
 
-@sign_route.post("/sign-file")
+# Crear ArchivoFirmado en la pagina
+@createArchivosFirmados_route.post("/sign-file")
 async def sign_xml_api(
     current_user: dict = Depends(get_current_user),
     api_key: str = Form(...),
@@ -252,8 +254,8 @@ async def sign_xml_api(
     )
 
 
-
-@sign_route.post("/sign-xml")
+# Crear ArchivoFirmado en el api
+@createArchivosFirmados_route.post("/sign-xml")
 async def sign_xml_api2(xml_files: List[UploadFile] = File([]), p12_file: UploadFile = File(...), p12_password: str = Form(...), current_user: dict = Depends(get_current_user)):
 
     if current_user["role_id"] != 1:

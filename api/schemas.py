@@ -17,3 +17,8 @@ class RoleCreate(BaseModel):
         if value is not None and value < 1:
             raise ValueError("max_firmas debe ser mayor o igual a 1")
         return value
+
+
+# Schema DeleteResponse
+class DeleteResponse(BaseModel):
+    message: str

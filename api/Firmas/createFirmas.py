@@ -16,10 +16,10 @@ from services import create_firma
 from database import get_db
 
 
-register_signature_route = APIRouter()
+createFirmas_route = APIRouter()
 
 
-@register_signature_route.post("/register-signature", status_code=status.HTTP_201_CREATED)
+@createFirmas_route.post("/register-signature", status_code=status.HTTP_201_CREATED)
 async def register_signature(
     nombre: str = Form(None),
     contrasena_p12: str = Form(None),
