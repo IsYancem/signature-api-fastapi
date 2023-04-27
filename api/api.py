@@ -6,6 +6,7 @@ from generalinfo import info_signature_route
 # Roles
 from Roles.showRoles import showRoles_route
 from Roles.updateRoles import updateRoles_route
+from Roles.deleteRoles import deleteRoles_route
 # Crear
 from Create.signup import register_route
 from Create.login import login_router
@@ -60,6 +61,7 @@ app.include_router(userSignatures_route) # Mostrar las firmas de un usuario - Us
 # Rutas de la entidad Roles
 app.include_router(showRoles_route) # Mostrar roles - Admin
 app.include_router(updateRoles_route) # Actualizar roles - Admin
+app.include_router(deleteRoles_route) # Eliminar roles - Admin
 
 app.add_middleware(
     CORSMiddleware,
