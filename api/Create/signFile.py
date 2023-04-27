@@ -16,6 +16,20 @@ from database import engine, SessionLocal
 from models import Firma, Usuario, ArchivoFirmado, TokenSesion
 from cryptography.fernet import Fernet
 from services import create_archivo_firmado
+import os
+import shutil
+from tempfile import NamedTemporaryFile
+import logging
+
+from fastapi import APIRouter, File, Form, UploadFile, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
+from typing import List
+from lxml import etree
+from database import SessionLocal, engine
+from models import ArchivoFirmado, Base
+
+Base.metadata.create_all(bind=engine)
 
 def generate_short_id():
     return str(random.randint(100000, 999999))
@@ -103,11 +117,11 @@ def sign_xml(xml_file, p12_file, p12_password, output_file):
         xml_declaration=True,
     )
 
-def generate_signed_file_url(file_basename: str) -> str:
-    #base_url = "https://pulpo.agency"
-    base_url = "http://localhost:8000"
-    signed_file_path = f"/firmados/{file_basename}"  # se agrega la extensión .xml al final del nombre del archivo
-    return f"{base_url}{signed_file_path}"
+# def generate_signed_file_url(file_basename: str) -> str:
+#     #base_url = "https://pulpo.agency"
+#     base_url = "http://localhost:8000"
+#     signed_file_path = f"/firmados/{file_basename}"  # se agrega la extensión .xml al final del nombre del archivo
+#     return f"{base_url}{signed_file_path}"
 
 sign_route = APIRouter()
 
@@ -165,7 +179,8 @@ async def sign_xml_api(
                 xml_tempfile_path = xml_tempfile.name
 
             nombre_archivo_final = f"{nombre_archivo}_{xml_file.filename}"
-            output_file = "firmados/" + nombre_archivo_final
+            # output_file = "firmados/" + nombre_archivo_final
+            output_file = nombre_archivo_final
 
             sign_xml(xml_tempfile_path, p12_tempfile_path, contrasena_p12_descifrado, output_file)
 
@@ -232,31 +247,51 @@ async def sign_xml_api(
         }
     )
 
+@sign_route.post("/sign-xml")
+async def sign_xml_api2(xml_files: List[UploadFile] = File(...), p12_file: UploadFile = File(...), p12_password: str = Form(...), current_user: dict = Depends(get_current_user)):
 
+    if current_user["role_id"] != 1:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No autorizado")
 
-sign_route_api = APIRouter()
-
-@sign_route_api.post("/sign-xml")
-async def sign_xml_api2(xml_file: Optional[UploadFile] = File(None), p12_file: Optional[UploadFile] = File(None), p12_password: Optional[str] = Form(None)):
-    
-    if not xml_file:
-        return JSONResponse(status_code=400, content={"detalles": [{"Status": "ERROR", "info": "El archivo XML es requerido"}]})
-    if not p12_file:
-        return JSONResponse(status_code=400, content={"detalles": [{"Status": "ERROR", "info": "El archivo p12 es requerido"}]})
-    if not p12_password:
-        return JSONResponse(status_code=400, content={"detalles": [{"Status": "ERROR", "info": "La contraseña del archivo p12 es requerida"}]})
-    
     try:
-        with NamedTemporaryFile(delete=False) as xml_tempfile, NamedTemporaryFile(delete=False) as p12_tempfile:
-            shutil.copyfileobj(xml_file.file, xml_tempfile)
+        with NamedTemporaryFile(delete=False) as p12_tempfile:
             shutil.copyfileobj(p12_file.file, p12_tempfile)
-            xml_tempfile_path = xml_tempfile.name
             p12_tempfile_path = p12_tempfile.name
 
-        file_basename = os.path.basename(xml_file.filename)
-        output_file = "firmados/Firmado_" + file_basename
+        output_files = []
+        for xml_file in xml_files:
+            with NamedTemporaryFile(delete=False) as xml_tempfile:
+                shutil.copyfileobj(xml_file.file, xml_tempfile)
+                xml_tempfile_path = xml_tempfile.name
 
-        sign_xml(xml_tempfile_path, p12_tempfile_path, p12_password.encode(), output_file)
+            file_basename = os.path.basename(xml_file.filename)
+            output_file = "Firmado_" + file_basename
+
+            sign_xml(xml_tempfile_path, p12_tempfile_path, p12_password.encode(), output_file)
+
+            with open(output_file, "rb") as signed_file:
+                signed_file_data = signed_file.read()
+
+            db_file = ArchivoFirmado(
+                nombre_archivo="Firmado_" + current_user["username"] + "_" + file_basename,
+                fecha_hora_firma=datetime.now(),
+                firma_id=None,
+                usuario_id=current_user["id"],
+                archivo_firmado=signed_file_data,
+            )
+
+            db = SessionLocal()
+            db.add(db_file)
+            db.commit()
+            db.refresh(db_file)
+
+            os.unlink(xml_tempfile_path)
+            os.unlink(output_file)
+
+        return JSONResponse(content={
+            "status": "ok",
+            "mensaje": "Los archivos se firmaron de manera exitosa!",
+        })
 
     except FileNotFoundError:
         logging.error("Archivo no encontrado")
@@ -273,15 +308,3 @@ async def sign_xml_api2(xml_file: Optional[UploadFile] = File(None), p12_file: O
     except Exception as e:
         logging.error(f"Error durante la firma del archivo XML: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error durante la firma del archivo XML: {str(e)}")
-
-    finally:
-        os.unlink(xml_tempfile_path)
-        os.unlink(p12_tempfile_path)
-
-    signed_file_url = generate_signed_file_url(file_basename)
-
-    return JSONResponse(content={
-        "status": "ok",
-        "mensaje": "La factura se firmó de manera exitosa!",
-        "comprobante": signed_file_url,
-    })

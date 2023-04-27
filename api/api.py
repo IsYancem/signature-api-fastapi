@@ -7,7 +7,7 @@ from generalinfo import info_signature_route
 from Create.signup import register_route
 from Create.login import login_router
 from Create.registerSignature import register_signature_route
-from Create.signFile import sign_route, sign_route_api
+from Create.signFile import sign_route
 # Read o Mostrar
 from Read.userInfo import userInfo_router
 from Read.signedByUser import signed_by_user_route
@@ -27,13 +27,7 @@ from Update.updateSignature import updateSignature_route
 
 app = FastAPI()
 
-# Montar la carpeta 'firmados' como ruta estática para servir los archivos XML firmados
-app.mount("/firmados", StaticFiles(directory="firmados"), name="firmados")
-
 # Endpoints
-# Crear archivo firmado solo con xml, p12 y password
-app.include_router(sign_route_api)
-
 # Rutas para Crear registros
 app.include_router(sign_route) # Firmar archivos con api_key y el xml
 app.include_router(register_route) # Registrar usuario
