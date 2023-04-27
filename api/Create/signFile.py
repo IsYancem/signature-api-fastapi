@@ -6,28 +6,22 @@ from xades.policy import ImpliedPolicy
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.hazmat.backends import default_backend
 from tempfile import NamedTemporaryFile
-from fastapi import  HTTPException, File, UploadFile, Form,  APIRouter, Depends, Header
+from fastapi import File, UploadFile, Form,  APIRouter, Depends, Header, HTTPException, status
 from starlette.responses import JSONResponse
 from typing import Optional, List
 from jose import jwt
 from config import SECRET_KEY, ALGORITHM
 from dependencies import get_current_user, TokenData
-from database import engine, SessionLocal
-from models import Firma, Usuario, ArchivoFirmado, TokenSesion
+from database import engine, SessionLocal, get_db
+from models import Firma, Usuario, ArchivoFirmado, TokenSesion, Base, Role
 from cryptography.fernet import Fernet
 from services import create_archivo_firmado
 import os
 import shutil
 from tempfile import NamedTemporaryFile
 import logging
-
-from fastapi import APIRouter, File, Form, UploadFile, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from typing import List
-from lxml import etree
-from database import SessionLocal, engine
-from models import ArchivoFirmado, Base
 
 Base.metadata.create_all(bind=engine)
 
@@ -117,12 +111,6 @@ def sign_xml(xml_file, p12_file, p12_password, output_file):
         xml_declaration=True,
     )
 
-# def generate_signed_file_url(file_basename: str) -> str:
-#     #base_url = "https://pulpo.agency"
-#     base_url = "http://localhost:8000"
-#     signed_file_path = f"/firmados/{file_basename}"  # se agrega la extensión .xml al final del nombre del archivo
-#     return f"{base_url}{signed_file_path}"
-
 sign_route = APIRouter()
 
 @sign_route.post("/sign-file")
@@ -131,19 +119,13 @@ async def sign_xml_api(
     api_key: str = Form(...),
     nombre_archivo: str = Form(...),
     xml_files: List[UploadFile] = File(...),
-):
+    db: Session = Depends(get_db)):
+
     # 1. Autenticar si el usuario está autorizado
     if not current_user:
         raise HTTPException(status_code=401, detail="No autorizado, no existe el usuario activo")
 
-    try:
-        user_id = current_user["id"]
-    except HTTPException as e:
-        return JSONResponse(status_code=e.status_code, content=e.detail)
-
     # 2. Autenticar que el API key enviado en el body es válido y corresponde a un registro en firmas
-    db = SessionLocal()
-
     firma = (
         db.query(Firma)
         .filter(Firma.token_p12 == api_key)
@@ -152,16 +134,38 @@ async def sign_xml_api(
     )
 
     if not firma:
-        return JSONResponse(
+        raise HTTPException(
             status_code=400,
-            content={"detalle": "API key inválido o no corresponde al usuario"},
+            detail={"detalle": "API key inválido o no corresponde al usuario"},
         )
+
+    # 3. Verificar límite de archivos firmados por usuario
+    max_archivos = (
+        db.query(Role.max_archivos)
+        .join(Usuario, Usuario.role_id == Role.id)
+        .filter(Usuario.id == current_user["id"])
+        .scalar()
+    )
+    
+    if max_archivos is not None:
+        archivos_firmados = (
+            db.query(ArchivoFirmado)
+            .filter(ArchivoFirmado.usuario_id == current_user["id"])
+            .count()
+        )
+        
+        if archivos_firmados + len(xml_files) > max_archivos:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "detalle": f"Límite de archivos firmados ({max_archivos}) alcanzado para el usuario actual"
+                },
+            )
 
     # Obtener la clave_cifrado del registro de Firma
     clave_cifrado = firma.clave_cifrado
 
     # Recorrer los archivos cargados
-    archivos_firmados = []
     for xml_file in xml_files:
         try:
             # Descifrar archivo_p12 y contrasena_p12 de la tabla firmas
@@ -246,6 +250,8 @@ async def sign_xml_api(
             "mensaje": "La factura se firmó de manera exitosa!",
         }
     )
+
+
 
 @sign_route.post("/sign-xml")
 async def sign_xml_api2(xml_files: List[UploadFile] = File(...), p12_file: UploadFile = File(...), p12_password: str = Form(...), current_user: dict = Depends(get_current_user)):

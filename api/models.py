@@ -9,18 +9,6 @@ from fastapi import Form, Body
 
 Base = declarative_base()
 
-class SignedFile:
-    def __init__(
-        self, 
-        nombre_archivo: str, 
-        fecha_hora_firma: datetime, 
-        nombre_firma: str
-    ):
-        self.nombre_archivo = nombre_archivo
-        self.fecha_hora_firma = fecha_hora_firma
-        self.nombre_firma = nombre_firma
-
-
 class ArchivoFirmado(Base):
     __tablename__ = "ArchivosFirmados"
 
@@ -66,6 +54,8 @@ class Role(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(50), nullable=False)
+    max_archivos = Column(Integer)
+    max_firmas = Column(Integer)
 
 class UserCreate(BaseModel):
     username: str
@@ -89,4 +79,4 @@ class SignedFile(BaseModel):
 #Esto estoy utilizando xd
 class UpdatePassword(BaseModel):
     new_password: str
-    new_password_confirmation: str 
+    new_password_confirmation: str

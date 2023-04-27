@@ -22,7 +22,6 @@ def connect():
 
     return cnx
 
-
 password_encoded = quote_plus(password)
 DATABASE_URL = f"mysql+pymysql://{user}:{password_encoded}@{host}/{database}?charset=utf8mb4"
 
@@ -33,3 +32,11 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
+# Función para crear una nueva sesión de base de datos
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
